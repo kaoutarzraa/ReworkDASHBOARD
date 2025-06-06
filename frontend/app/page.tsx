@@ -1,9 +1,10 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Search, Sun, Moon, CheckCircle, Clock, AlertTriangle, BarChart3 } from "lucide-react"
+import { Search, Sun, Moon, CheckCircle, Clock, AlertTriangle, BarChart3, SnowflakeIcon as Crystal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // Import components
 import { LiveClock } from "@/components/live-clock"
@@ -28,18 +29,33 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState<ChartData | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [activeView, setActiveView] = useState<"dashboard" | "motor" | "interior" | "map">("dashboard")
+  const [activeView, setActiveView] = useState<"dashboard" | "motor" | "interior" | "map" | "ftq-analysis">("dashboard")
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [ftqData, setFtqData] = useState<{
+    current: number
+    target: number
+    defects: number
+    production: number
+  } | null>(null)
+  const [showFTQGraphs, setShowFTQGraphs] = useState(false)
 
   const loadData = async () => {
     try {
       setLoading(true)
       setError(null)
 
+      console.log("Chargement des données principales...")
       const response = await fetch("/backend/data/data.json")
 
       if (!response.ok) {
+        console.warn(`Réponse HTTP non OK: ${response.status} ${response.statusText}`)
         throw new Error(`Erreur HTTP! Statut: ${response.status}`)
+      }
+
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        console.warn(`Type de contenu inattendu: ${contentType}`)
+        throw new Error("La réponse n'est pas du JSON valide")
       }
 
       const data = await response.json()
@@ -48,21 +64,58 @@ export default function Dashboard() {
         throw new Error("Format de données invalide: un tableau est attendu")
       }
 
+      console.log(`Données principales chargées: ${data.length} éléments`)
       const normalizedData = normalizeData(data)
       setReworkData(normalizedData)
       setStatsData(calculateStats(data))
       setChartData(prepareChartData(normalizedData))
       setLastUpdate(new Date())
+
+      // Calculer les données FTQ initiales
+      const defectsCount = data.length
+      const plannedProduction = 1000
+      const ftq = 1 - defectsCount / plannedProduction
+      const ftqPercentage = Math.round(ftq * 100)
+
+      setFtqData({
+        current: ftqPercentage,
+        target: 95,
+        defects: defectsCount,
+        production: plannedProduction,
+      })
     } catch (err) {
       console.error("Erreur de chargement des données:", err)
       setError(err instanceof Error ? err.message : "Une erreur inconnue est survenue")
 
-      const fallbackData: any[] = []
+      // Générer des données de fallback plus réalistes
+      const fallbackData = Array.from({ length: 50 }, (_, i) => ({
+        ORDNR: `ORD${String(i + 1).padStart(3, "0")}`,
+        Area: i % 2 === 0 ? "Motor" : "Interior",
+        Line: `L${(i % 3) + 1}`,
+        REWORK_DATE: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        Rework_time: Math.floor(Math.random() * 90) + 20,
+        defect_type: ["Terminal", "Connecteur", "Sécurité", "Autre"][Math.floor(Math.random() * 4)],
+      }))
 
-      setReworkData(fallbackData)
+      console.log("Utilisation des données de fallback principales:", fallbackData.length, "éléments")
+      const normalizedFallback = normalizeData(fallbackData)
+      setReworkData(normalizedFallback)
       setStatsData(calculateStats(fallbackData))
-      setChartData(prepareChartData(fallbackData))
+      setChartData(prepareChartData(normalizedFallback))
       setLastUpdate(new Date())
+
+      // Calculer les données FTQ de fallback
+      const defectsCount = fallbackData.length
+      const plannedProduction = 1000
+      const ftq = 1 - defectsCount / plannedProduction
+      const ftqPercentage = Math.round(ftq * 100)
+
+      setFtqData({
+        current: ftqPercentage,
+        target: 95,
+        defects: defectsCount,
+        production: plannedProduction,
+      })
     } finally {
       setLoading(false)
     }
@@ -79,6 +132,18 @@ export default function Dashboard() {
   }, [])
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark")
+
+  const handleFTQPredict = (data: { ftq: number; defects: number; production: number }) => {
+    setFtqData({
+      current: data.ftq,
+      target: 95,
+      defects: data.defects,
+      production: data.production,
+    })
+    setShowFTQGraphs(true)
+    // Basculer vers le dashboard pour voir les graphiques
+    setActiveView("dashboard")
+  }
 
   if (error) {
     return (
@@ -178,7 +243,11 @@ export default function Dashboard() {
 
             {/* Professional User Avatar */}
             <div className="relative">
-              
+              <Avatar className="h-10 w-10 border-2 border-slate-700/50 shadow-lg">
+                <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-semibold">
+                  AP
+                </AvatarFallback>
+              </Avatar>
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-lg"></div>
             </div>
           </div>
@@ -192,12 +261,97 @@ export default function Dashboard() {
             setActiveView={setActiveView}
             isCollapsed={sidebarCollapsed}
             setIsCollapsed={setSidebarCollapsed}
+            onFTQPredict={handleFTQPredict}
           />
 
           {/* Main Content */}
           <main className="flex-1 overflow-auto">
             {activeView === "dashboard" && (
               <div className="p-6 space-y-6">
+                {/* Graphiques FTQ si prédiction activée */}
+                {showFTQGraphs && ftqData && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-2xl font-bold text-slate-100">🌲 Analyse FTQ - Random Forest</h2>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowFTQGraphs(false)}
+                        className="text-slate-400 border-slate-600 hover:bg-slate-800"
+                      >
+                        Masquer
+                      </Button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                      {/* Graphique FTQ */}
+                      <Card className="bg-slate-800/50 border-slate-700/50">
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <Crystal className="mr-2 h-5 w-5 text-purple-500" />
+                            Prédiction FTQ (Random Forest)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-center space-y-4">
+                            <div className="text-6xl font-bold">
+                              <span className={ftqData.current >= 95 ? "text-green-400" : "text-red-400"}>
+                                {ftqData.current}%
+                              </span>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Défauts détectés:</span>
+                                <span className="text-slate-200">{ftqData.defects}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Production planifiée:</span>
+                                <span className="text-slate-200">{ftqData.production}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Objectif:</span>
+                                <span className="text-green-400">{ftqData.target}%</span>
+                              </div>
+                            </div>
+                            {ftqData.current < 95 && (
+                              <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                                <div className="text-red-400 font-medium">⚠️ ALERTE QUALITÉ</div>
+                                <div className="text-red-300 text-sm">FTQ en dessous du seuil critique</div>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Actions recommandées */}
+                      <Card className="bg-slate-800/50 border-slate-700/50">
+                        <CardHeader>
+                          <CardTitle className="flex items-center">
+                            <AlertTriangle className="mr-2 h-5 w-5 text-orange-500" />
+                            Actions Recommandées
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                              <div className="font-medium text-red-400">Priorité Haute</div>
+                              <div className="text-sm text-red-300">Contrôle Terminal - Impact: 85%</div>
+                            </div>
+                            <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                              <div className="font-medium text-orange-400">Priorité Moyenne</div>
+                              <div className="text-sm text-orange-300">Formation Équipe - Impact: 70%</div>
+                            </div>
+                            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                              <div className="font-medium text-blue-400">Priorité Normale</div>
+                              <div className="text-sm text-blue-300">Maintenance Préventive - Impact: 60%</div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </div>
+                )}
+
                 {/* Stats Cards - Compact Version */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <StatsCard
@@ -258,13 +412,22 @@ export default function Dashboard() {
                 </div>
 
                 {/* Dashboard Charts */}
-                <DashboardCharts chartData={chartData} reworkData={reworkData} theme={theme} />
+                <DashboardCharts
+                  chartData={chartData}
+                  reworkData={reworkData}
+                  activeIndex={0}
+                  onPieEnter={() => {}}
+                  renderActiveShape={() => <></>}
+                  theme={theme}
+                  searchQuery={searchQuery}
+                />
               </div>
             )}
 
             {activeView === "motor" && <MotorView chartData={chartData} theme={theme} />}
             {activeView === "interior" && <InteriorView chartData={chartData} theme={theme} />}
             {activeView === "map" && <MapView theme={theme} />}
+            {activeView === "ftq-analysis" && ftqData && <></>}
           </main>
         </div>
       </div>

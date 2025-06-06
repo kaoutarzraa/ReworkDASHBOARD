@@ -423,11 +423,11 @@ export const DashboardCharts = ({
                 <YAxis stroke="#9ca3af" />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="production" name="Production" stroke="#FF5252" strokeWidth={2} />
+                <Line type="monotone" dataKey="production" name="Target" stroke="#FF5252" strokeWidth={2} />
                 <Line
                   type="monotone"
                   dataKey="target"
-                  name="Target"
+                  name="Reel"
                   stroke="#536DFE"
                   strokeDasharray="5 5"
                   strokeWidth={2}
@@ -459,11 +459,11 @@ export const DashboardCharts = ({
                 <YAxis stroke="#9ca3af" />
                 <Tooltip />
                 <Legend />
-                <Line type="monotone" dataKey="production" name="Production" stroke="#4CAF50" strokeWidth={2} />
+                <Line type="monotone" dataKey="production" name="Target" stroke="#4CAF50" strokeWidth={2} />
                 <Line
                   type="monotone"
                   dataKey="target"
-                  name="Target"
+                  name="Reel"
                   stroke="#8BC34A"
                   strokeDasharray="5 5"
                   strokeWidth={2}
