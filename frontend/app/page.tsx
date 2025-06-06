@@ -219,37 +219,7 @@ export default function Dashboard() {
           <div className="flex items-center space-x-4">
             <LiveClock />
 
-            {/* Professional Search Bar */}
-            <div className="flex items-center space-x-2 bg-slate-800/60 rounded-xl px-4 py-2.5 border border-slate-700/50 backdrop-blur-sm hover:border-slate-600/50 transition-all duration-300 shadow-lg">
-              <Search className="h-4 w-4 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Search cables, orders..."
-                className="bg-transparent border-none focus:outline-none text-sm w-48 placeholder:text-slate-500 text-slate-200"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
 
-            {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className="text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 rounded-xl border border-transparent hover:border-slate-700/50 transition-all duration-300"
-            >
-              {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-
-            {/* Professional User Avatar */}
-            <div className="relative">
-              <Avatar className="h-10 w-10 border-2 border-slate-700/50 shadow-lg">
-                <AvatarFallback className="bg-gradient-to-br from-cyan-500 to-blue-600 text-white font-semibold">
-                  AP
-                </AvatarFallback>
-              </Avatar>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 shadow-lg"></div>
-            </div>
           </div>
         </header>
 
