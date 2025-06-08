@@ -17,7 +17,7 @@ import {
 } from "recharts"
 import { useEffect, useState } from "react"
 
-interface FTQAnalyticsProps {
+type FTQAnalyticsProps = {
   onClose?: () => void
 }
 
@@ -52,6 +52,7 @@ interface PythonPrediction {
 }
 
 export const FTQAnalytics = ({ onClose }: FTQAnalyticsProps) => {
+  // Supprimer { onClose }: FTQAnalyticsProps
   const [realData, setRealData] = useState<ReworkData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [prediction, setPrediction] = useState<PythonPrediction | null>(null)
@@ -179,10 +180,15 @@ export const FTQAnalytics = ({ onClose }: FTQAnalyticsProps) => {
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-slate-900 rounded-xl border border-slate-700 p-8 text-center">
-          <div className="animate-spin h-12 w-12 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <h3 className="text-xl font-bold text-slate-100 mb-2">🐍 Prédiction Python ML en cours...</h3>
-          <p className="text-slate-400">Analyse avec scikit-learn Random Forest</p>
+        <div className="bg-slate-900 rounded-xl border border-slate-700 p-12 text-center max-w-md w-full">
+          <div className="animate-spin h-16 w-16 border-4 border-purple-500 border-t-transparent rounded-full mx-auto mb-6"></div>
+          <h3 className="text-2xl font-bold text-slate-100 mb-3">🐍 Prédiction Python ML en cours...</h3>
+          <p className="text-slate-400 text-lg">Analyse avec scikit-learn Random Forest</p>
+          <div className="mt-4 flex items-center justify-center space-x-2">
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0.1s" }}></div>
+            <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></div>
+          </div>
         </div>
       </div>
     )
@@ -283,7 +289,7 @@ export const FTQAnalytics = ({ onClose }: FTQAnalyticsProps) => {
           {prediction && (
             <>
               {/* Métriques principales */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* FTQ Actuel */}
                 <Card className="bg-slate-800/50 border-slate-700/50">
                   <CardHeader>
@@ -338,7 +344,10 @@ export const FTQAnalytics = ({ onClose }: FTQAnalyticsProps) => {
                     </div>
                   </CardContent>
                 </Card>
+              </div>
 
+              {/* Lignes Optimales et Non Optimales */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Lignes Optimales */}
                 <Card className="bg-slate-800/50 border-slate-700/50">
                   <CardHeader>
@@ -360,6 +369,32 @@ export const FTQAnalytics = ({ onClose }: FTQAnalyticsProps) => {
                           🏆 {prediction.line_analysis.best_interior_line}
                         </div>
                         <div className="text-green-300 text-xs">Zone Interior - Pattern stable</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Lignes Non Optimales */}
+                <Card className="bg-slate-800/50 border-slate-700/50">
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-sm">
+                      <AlertTriangle className="mr-2 h-4 w-4 text-red-500" />
+                      Lignes non Optimales (Python)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="h-48">
+                    <div className="space-y-4">
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <div className="text-red-400 font-medium text-sm">
+                          ⚠️ {prediction.line_analysis.worst_motor_line}
+                        </div>
+                        <div className="text-red-300 text-xs">Zone Motor - Nécessite amélioration</div>
+                      </div>
+                      <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <div className="text-red-400 font-medium text-sm">
+                          ⚠️ {prediction.line_analysis.worst_interior_line}
+                        </div>
+                        <div className="text-red-300 text-xs">Zone Interior - Performance faible</div>
                       </div>
                     </div>
                   </CardContent>

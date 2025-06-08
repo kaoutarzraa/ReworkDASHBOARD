@@ -1,10 +1,9 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Search, Sun, Moon, CheckCircle, Clock, AlertTriangle, BarChart3, SnowflakeIcon as Crystal } from "lucide-react"
+import { Search, Sun, Moon, CheckCircle, Clock, AlertTriangle, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 // Import components
 import { LiveClock } from "@/components/live-clock"
@@ -169,7 +168,7 @@ export default function Dashboard() {
       <div className="flex items-center justify-center min-h-screen bg-slate-900">
         <div className="animate-pulse flex flex-col items-center">
           <div className="h-12 w-12 rounded-lg bg-cyan-500 mb-4 animate-spin" />
-          <span className="text-slate-400">Chargement des données...</span>
+          <span className="text-slate-400"></span>
         </div>
       </div>
     )
@@ -218,8 +217,6 @@ export default function Dashboard() {
           {/* Right Side Controls */}
           <div className="flex items-center space-x-4">
             <LiveClock />
-
-
           </div>
         </header>
 
@@ -239,88 +236,6 @@ export default function Dashboard() {
             {activeView === "dashboard" && (
               <div className="p-6 space-y-6">
                 {/* Graphiques FTQ si prédiction activée */}
-                {showFTQGraphs && ftqData && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-2xl font-bold text-slate-100">🌲 Analyse FTQ - Random Forest</h2>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowFTQGraphs(false)}
-                        className="text-slate-400 border-slate-600 hover:bg-slate-800"
-                      >
-                        Masquer
-                      </Button>
-                    </div>
-
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                      {/* Graphique FTQ */}
-                      <Card className="bg-slate-800/50 border-slate-700/50">
-                        <CardHeader>
-                          <CardTitle className="flex items-center">
-                            <Crystal className="mr-2 h-5 w-5 text-purple-500" />
-                            Prédiction FTQ (Random Forest)
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="text-center space-y-4">
-                            <div className="text-6xl font-bold">
-                              <span className={ftqData.current >= 95 ? "text-green-400" : "text-red-400"}>
-                                {ftqData.current}%
-                              </span>
-                            </div>
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <span className="text-slate-400">Défauts détectés:</span>
-                                <span className="text-slate-200">{ftqData.defects}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-slate-400">Production planifiée:</span>
-                                <span className="text-slate-200">{ftqData.production}</span>
-                              </div>
-                              <div className="flex justify-between">
-                                <span className="text-slate-400">Objectif:</span>
-                                <span className="text-green-400">{ftqData.target}%</span>
-                              </div>
-                            </div>
-                            {ftqData.current < 95 && (
-                              <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                                <div className="text-red-400 font-medium">⚠️ ALERTE QUALITÉ</div>
-                                <div className="text-red-300 text-sm">FTQ en dessous du seuil critique</div>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Actions recommandées */}
-                      <Card className="bg-slate-800/50 border-slate-700/50">
-                        <CardHeader>
-                          <CardTitle className="flex items-center">
-                            <AlertTriangle className="mr-2 h-5 w-5 text-orange-500" />
-                            Actions Recommandées
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                              <div className="font-medium text-red-400">Priorité Haute</div>
-                              <div className="text-sm text-red-300">Contrôle Terminal - Impact: 85%</div>
-                            </div>
-                            <div className="p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                              <div className="font-medium text-orange-400">Priorité Moyenne</div>
-                              <div className="text-sm text-orange-300">Formation Équipe - Impact: 70%</div>
-                            </div>
-                            <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                              <div className="font-medium text-blue-400">Priorité Normale</div>
-                              <div className="text-sm text-blue-300">Maintenance Préventive - Impact: 60%</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-                )}
 
                 {/* Stats Cards - Compact Version */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
