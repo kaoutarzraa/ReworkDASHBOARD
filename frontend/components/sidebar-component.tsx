@@ -214,41 +214,7 @@ function SidebarComponent({
             )}
           </Button>
 
-          {/* Affichage des résultats FTQ */}
-          {!isCollapsed && ftqPrediction?.show && (
-            <div className="mt-4 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-              <div className="text-xs font-semibold text-purple-400 mb-2">Dernière Prédiction FTQ</div>
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-400">FTQ:</span>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${
-                      ftqPrediction.ftq >= 95
-                        ? "bg-green-500/10 text-green-400 border-green-500/20"
-                        : "bg-red-500/10 text-red-400 border-red-500/20"
-                    }`}
-                  >
-                    {ftqPrediction.ftq}%
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-400">Défauts:</span>
-                  <span className="text-xs text-slate-200">{ftqPrediction.defects}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-slate-400">Production:</span>
-                  <span className="text-xs text-slate-200">{ftqPrediction.production}</span>
-                </div>
-                {ftqPrediction.ftq < 95 && (
-                  <div className="mt-2 p-2 rounded bg-red-500/10 border border-red-500/20">
-                    <div className="text-xs text-red-400 font-medium">⚠️ Alerte Qualité</div>
-                    <div className="text-xs text-red-300">FTQ &lt; 95%</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+          
         </nav>
 
       </aside>
