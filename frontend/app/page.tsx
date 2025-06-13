@@ -1,9 +1,8 @@
 "use client"
 import { useEffect, useState } from "react"
-import { Search, Sun, Moon, CheckCircle, Clock, AlertTriangle, BarChart3 } from "lucide-react"
+import { CheckCircle, Clock, AlertTriangle, BarChart3 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 
 // Import components
 import { LiveClock } from "@/components/live-clock"
@@ -37,97 +36,100 @@ export default function Dashboard() {
     production: number
   } | null>(null)
   const [showFTQGraphs, setShowFTQGraphs] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
 
   const loadData = async () => {
     try {
-      setLoading(true)
+      setRefreshing(true)
       setError(null)
 
-      console.log("Chargement des données principales...")
-      const response = await fetch("/backend/data/data.json")
+      console.log("Génération des données en temps réel...")
 
-      if (!response.ok) {
-        console.warn(`Réponse HTTP non OK: ${response.status} ${response.statusText}`)
-        throw new Error(`Erreur HTTP! Statut: ${response.status}`)
-      }
+      // Générer des données simulées directement (pas de fetch)
+      // Générer des données simulées avec la vraie structure
+      const fallbackData = Array.from({ length: 50 + Math.floor(Math.sin(Date.now() / 8000) * 20) }, (_, i) => {
+        const shifts = ["matin", "soir", "nuit"]
+        const defectTypes = ["Terminal", "Connecteur", "Sécurité", "Isolation", "Autre"]
+        const defectDescriptions = ["inversion", "missing", "damaged", "loose", "wrong_position"]
+        const statuses = ["Completed", "In Progress", "Pending"]
+        const lines = ["Line 1", "Line 2", "Line 3", "Line 4"]
+        const areas = ["Motor", "Interior"]
 
-      const contentType = response.headers.get("content-type")
-      if (!contentType || !contentType.includes("application/json")) {
-        console.warn(`Type de contenu inattendu: ${contentType}`)
-        throw new Error("La réponse n'est pas du JSON valide")
-      }
+        const reworkTime = Math.floor(Math.random() * 90) + 20
+        let priority = "normal"
+        if (reworkTime > 60) priority = "urgent"
+        else if (reworkTime >= 40) priority = "medium"
 
-      const data = await response.json()
-
-      if (!Array.isArray(data)) {
-        throw new Error("Format de données invalide: un tableau est attendu")
-      }
-
-      console.log(`Données principales chargées: ${data.length} éléments`)
-      const normalizedData = normalizeData(data)
-      setReworkData(normalizedData)
-      setStatsData(calculateStats(data))
-      setChartData(prepareChartData(normalizedData))
-      setLastUpdate(new Date())
-
-      // Calculer les données FTQ initiales
-      const defectsCount = data.length
-      const plannedProduction = 1000
-      const ftq = 1 - defectsCount / plannedProduction
-      const ftqPercentage = Math.round(ftq * 100)
-
-      setFtqData({
-        current: ftqPercentage,
-        target: 95,
-        defects: defectsCount,
-        production: plannedProduction,
+        return {
+          REWORK_DATE: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .replace("T", " ")
+            .split(".")[0],
+          ORDNR: `240930${String(i + 1).padStart(4, "0")}`,
+          SUBPROD: Math.random() > 0.5 ? "A" : "B",
+          RWRK_CODE: String(Math.floor(Math.random() * 5) + 1),
+          DESCR: "CrossWire",
+          RWRK_DETAIL: `${defectTypes[Math.floor(Math.random() * defectTypes.length)]} ${defectDescriptions[Math.floor(Math.random() * defectDescriptions.length)]} ${lines[Math.floor(Math.random() * lines.length)]}`,
+          Line: lines[Math.floor(Math.random() * lines.length)],
+          Area: areas[i % 2],
+          Rework_time: reworkTime,
+          Success: Math.random() > 0.2 ? 1 : 0,
+          Priority: priority,
+          Defect_type: defectTypes[Math.floor(Math.random() * defectTypes.length)],
+          Defect_description: defectDescriptions[Math.floor(Math.random() * defectDescriptions.length)],
+          Status: statuses[Math.floor(Math.random() * statuses.length)],
+          shift: shifts[Math.floor(Math.random() * shifts.length)],
+        }
       })
-    } catch (err) {
-      console.error("Erreur de chargement des données:", err)
-      setError(err instanceof Error ? err.message : "Une erreur inconnue est survenue")
 
-      // Générer des données de fallback plus réalistes
-      const fallbackData = Array.from({ length: 50 }, (_, i) => ({
-        ORDNR: `ORD${String(i + 1).padStart(3, "0")}`,
-        Area: i % 2 === 0 ? "Motor" : "Interior",
-        Line: `L${(i % 3) + 1}`,
-        REWORK_DATE: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        Rework_time: Math.floor(Math.random() * 90) + 20,
-        defect_type: ["Terminal", "Connecteur", "Sécurité", "Autre"][Math.floor(Math.random() * 4)],
-      }))
-
-      console.log("Utilisation des données de fallback principales:", fallbackData.length, "éléments")
+      console.log("Données générées:", fallbackData.length, "éléments")
       const normalizedFallback = normalizeData(fallbackData)
       setReworkData(normalizedFallback)
       setStatsData(calculateStats(fallbackData))
       setChartData(prepareChartData(normalizedFallback))
       setLastUpdate(new Date())
 
-      // Calculer les données FTQ de fallback
+      // Calculer les données FTQ dynamiques
       const defectsCount = fallbackData.length
-      const plannedProduction = 1000
+      const plannedProduction = 1000 + Math.floor(Math.sin(Date.now() / 10000) * 100)
       const ftq = 1 - defectsCount / plannedProduction
       const ftqPercentage = Math.round(ftq * 100)
 
       setFtqData({
-        current: ftqPercentage,
+        current: Math.max(85, Math.min(98, ftqPercentage)),
         target: 95,
         defects: defectsCount,
         production: plannedProduction,
       })
+    } catch (err) {
+      console.error("Erreur lors de la génération des données:", err)
+      setError("Erreur lors de la génération des données")
     } finally {
+      setRefreshing(false)
       setLoading(false)
     }
   }
 
   useEffect(() => {
+    // Initial data load
     loadData()
 
-    const interval = setInterval(() => {
+    // Update clock every second
+    const clockInterval = setInterval(() => {
       setCurrentTime(new Date())
     }, 1000)
 
-    return () => clearInterval(interval)
+    // Refresh data every 5 seconds
+    const dataRefreshInterval = setInterval(() => {
+      console.log("Actualisation automatique des données...")
+      loadData()
+    }, 5000)
+
+    // Clean up both intervals on component unmount
+    return () => {
+      clearInterval(clockInterval)
+      clearInterval(dataRefreshInterval)
+    }
   }, [])
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark")
@@ -200,13 +202,16 @@ export default function Dashboard() {
                     Rework Area DASHBOARD
                   </h1>
                   {lastUpdate && (
-                    <Badge
-                      variant="outline"
-                      className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-lg backdrop-blur-sm"
-                    >
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></div>
-                      Live
-                    </Badge>
+                    <div className="flex items-center space-x-2">
+                      <Badge
+                        variant="outline"
+                        className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-lg backdrop-blur-sm"
+                      >
+                        <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></div>
+                        Live
+                      </Badge>
+                      {refreshing && <span className="text-xs text-cyan-400 animate-pulse">Actualisation...</span>}
+                    </div>
                   )}
                 </div>
                 <p className="text-sm text-slate-400 font-medium tracking-wide">Production Quality Management System</p>

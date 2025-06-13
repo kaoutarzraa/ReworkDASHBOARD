@@ -1,3 +1,5 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Gauge, BarChart3, PieChartIcon, Activity } from "lucide-react"
@@ -18,6 +20,33 @@ export const MotorView = ({ chartData, theme = "dark" }: MotorViewProps) => {
 
   if (!chartData || !chartData.motorReworksByLine || !chartData.motorDefectData || !chartData.recentMotorCables) {
     return <div className={`p-4 ${theme === "dark" ? "text-slate-400" : "text-gray-600"}`}>Loading Motor Data...</div>
+  }
+
+  // Format time for display
+  const formatTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })
+    } catch {
+      return "N/A"
+    }
+  }
+
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString([], {
+        month: "short",
+        day: "numeric",
+      })
+    } catch {
+      return "N/A"
+    }
   }
 
   return (
@@ -46,7 +75,7 @@ export const MotorView = ({ chartData, theme = "dark" }: MotorViewProps) => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} />
                 <YAxis stroke="#9ca3af" fontSize={12} />
-                <Tooltip />
+                <Tooltip contentStyle={{ backgroundColor: "#1f2937", borderColor: "#374151" }} />
                 <Legend />
                 {Object.keys(MOTOR_LINE_COLORS).map((lineKey) => (
                   <Bar
@@ -81,6 +110,7 @@ export const MotorView = ({ chartData, theme = "dark" }: MotorViewProps) => {
                 <Activity className="mr-2 h-5 w-5 text-cyan-500" />
                 Recent Cables in Motor Rework Area
               </CardTitle>
+              <p className="text-xs text-slate-400">Showing latest motor cables • Live data updates every 5 seconds</p>
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
@@ -88,11 +118,13 @@ export const MotorView = ({ chartData, theme = "dark" }: MotorViewProps) => {
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 bg-slate-900 z-10">
                       <tr className="border-b border-slate-700 text-slate-400 text-left">
-                        <th className="pb-2 pl-2">Cable</th>
-                        <th className="pb-2">Type</th>
-                        <th className="pb-2">Line</th>
-                        <th className="pb-2">Priority</th>
-                        <th className="pb-2 pr-2 text-right">Time</th>
+                        <th className="pb-2 pl-2 w-[120px]">Cable Title</th>
+                        <th className="pb-2 w-[80px]">Line</th>
+                        <th className="pb-2 w-[80px]">Priority</th>
+                        <th className="pb-2 w-[90px]">Date/Time</th>
+                        <th className="pb-2 w-[80px]">Duration</th>
+                        <th className="pb-2 w-[80px]">Status</th>
+                        <th className="pb-2 pr-2 w-[80px]">Shift</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -115,23 +147,63 @@ export const MotorView = ({ chartData, theme = "dark" }: MotorViewProps) => {
                         }
 
                         return (
-                          <tr key={index} className="border-b border-slate-800/50 hover:bg-slate-800/30">
-                            <td className="py-2 pl-2 font-mono text-xs">{item.ORDNR}</td>
-                            <td className="py-2 text-xs">{item.Area}</td>
-                            <td className="py-2 text-xs">{item.Line}</td>
+                          <tr
+                            key={`${item.ORDNR}-${index}`}
+                            className="border-b border-slate-800/50 hover:bg-slate-800/30"
+                          >
+                            <td className="py-2 pl-2 font-mono text-xs" title={item.ORDNR}>
+                              <div className="font-semibold text-slate-200">{item.ORDNR}</div>
+                            </td>
+                            <td className="py-2 text-xs text-slate-300">{item.Line}</td>
                             <td className="py-2">
                               <Badge variant="outline" className={`text-xs ${priorityClass}`}>
                                 {priority}
                               </Badge>
                             </td>
-                            <td className={`py-2 pr-2 text-right text-xs font-medium ${timeColor}`}>
-                              {reworkTime} min
+                            <td className="py-2 text-xs text-slate-400">
+                              <div className="flex flex-col">
+                                <span>{formatDate(item.REWORK_DATE)}</span>
+                                <span className="text-slate-500">{formatTime(item.REWORK_DATE)}</span>
+                              </div>
                             </td>
+                            <td className={`py-2 text-xs font-medium ${timeColor}`}>{reworkTime} min</td>
+                            <td className="py-2 text-xs">
+                              <Badge
+                                variant="outline"
+                                className={`text-xs ${
+                                  item.Status === "Completed"
+                                    ? "bg-green-500/10 text-green-400 border-green-500/20"
+                                    : item.Status === "In Progress"
+                                      ? "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+                                      : "bg-gray-500/10 text-gray-400 border-gray-500/20"
+                                }`}
+                              >
+                                {item.Status}
+                              </Badge>
+                            </td>
+                            <td className="py-2 pr-2 text-xs text-slate-300 capitalize">{item.shift}</td>
                           </tr>
                         )
                       })}
                     </tbody>
                   </table>
+                </div>
+              </div>
+              <div className="mt-2 text-xs text-slate-500 flex justify-between items-center">
+                <span>Total motor cables: {chartData.recentMotorCables.length}</span>
+                <div className="flex items-center space-x-2">
+                  <span className="flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span>
+                    Urgent
+                  </span>
+                  <span className="flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-orange-500 mr-1"></span>
+                    Medium
+                  </span>
+                  <span className="flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>
+                    Normal
+                  </span>
                 </div>
               </div>
             </CardContent>
